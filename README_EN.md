@@ -1,3 +1,5 @@
+This is an automatic translation, may be incorrect in some places. See sources and examples!
+
 # GyverHC595
 74HC595 shift register cascade control library for Arduino
 - Access by pin number in the cascade
