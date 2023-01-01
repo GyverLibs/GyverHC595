@@ -13,6 +13,7 @@
 
     Версии:
     v1.0
+    v1.1 - улучшена производительность esp8266
 */
 
 #ifndef _GyverHC595_h
@@ -106,9 +107,12 @@ private:
     }
 
     void setPin(int num, bool state) {
-        #ifdef __AVR__
+        #if defined(__AVR__)
         if (state) *_port_reg[num] |= _bit_mask[num];
         else *_port_reg[num] &= ~_bit_mask[num];
+        #elif defined(ESP8266)
+        if (state) GPOS = (1 << _pins[num]);
+        else GPOC = (1 << _pins[num]);
         #else
         digitalWrite(_pins[num], state);
         #endif
