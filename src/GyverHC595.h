@@ -14,6 +14,7 @@
     Версии:
     v1.0
     v1.1 - улучшена производительность esp8266
+    v1.2 - оптимизация, исправлен аппаратный SPI на esp8266, добавлены функции включения/выключения всех ног, инициализация для пустого конструктора
 */
 
 #ifndef _GyverHC595_h
@@ -32,39 +33,67 @@
 template < const uint16_t _AMNT, const bool _MODE = HC_SPI, const uint32_t _SPD = 4000000ul >
 class GyverHC595 {
 public:
+    GyverHC595() {}
+        
     // конструктор с пином CS
-    GyverHC595(uint8_t CS) {
-        configurePin(_HC_CS, CS);
-        setPin(_HC_CS, HIGH);
-        if (_MODE) SPI.begin();
+    GyverHC595(int CS) {
+        begin(CS);
     }
 
     // конструктор с пинами CS, DT, CLK
-    GyverHC595(uint8_t CS, uint8_t DT, uint8_t CLK) {
+    GyverHC595(int CS, int DT, int CLK) {
+        begin(CS, DT, CLK);
+    }
+    
+    // инициализация для SPI
+    void begin(int CS) {
+        if (_MODE) SPI.begin();
         configurePin(_HC_CS, CS);
         setPin(_HC_CS, HIGH);
+    }
+
+    // инициализация для bitbang
+    void begin(int CS, int DT, int CLK) {
+        begin(CS);
         if (!_MODE) {
             configurePin(_HC_DT, DT);
             configurePin(_HC_CLK, CLK);
         }
-        if (_MODE) SPI.begin();
+    }
+    
+    // прочитать состояние пина из буфера
+    bool read(uint16_t num) {
+        return (num < (_AMNT << 3)) ? bitRead(getB(num), num & 0b111) : 0;
     }
 
     // записать состояние пина под номером
     void write(uint16_t num, bool state) {
-        if (num >= (_AMNT << 3)) return;
-        if (state) bitSet(buffer[_AMNT - 1 - (num >> 3)], num & 0b111);
-        else bitClear(buffer[_AMNT - 1 - (num >> 3)], num & 0b111);
+        state ? set(num) : clear(num);
     }
 
     // включить пин под номером
     void set(uint16_t num) {
-        if (num < (_AMNT << 3)) bitSet(buffer[_AMNT - 1 - (num >> 3)], num & 0b111);
+        if (num < (_AMNT << 3)) bitSet(getB(num), num & 0b111);
     }
 
     // выключить пин под номером
     void clear(uint16_t num) {
-        if (num < (_AMNT << 3)) bitClear(buffer[_AMNT - 1 - (num >> 3)], num & 0b111);
+        if (num < (_AMNT << 3)) bitClear(getB(num), num & 0b111);
+    }
+    
+    // включить все
+    void setAll() {
+        memset(buffer, 0xff, _AMNT);
+    }
+    
+    // выключить все
+    void clearAll() {
+        memset(buffer, 0, _AMNT);
+    }
+    
+    // записать состояние всех
+    void writeAll(bool state) {
+        state ? setAll() : clearAll();
     }
 
     // записать байт данных (можно делать это напрямую с массивом)
@@ -84,18 +113,33 @@ public:
                     setPin(_HC_DT, data & (1 << 7));
                     data <<= 1;
                     setPin(_HC_CLK, HIGH);
+                    #ifdef HC595_DELAY
+                    delayMicroseconds(HC595_DELAY);
+                    #endif
                     setPin(_HC_CLK, LOW);
+                    #ifdef HC595_DELAY
+                    delayMicroseconds(HC595_DELAY);
+                    #endif
                 }
             }
         }
         setPin(_HC_CS, HIGH);
         if (_MODE) SPI.endTransaction();
     }
+    
+    // количество доступных пинов
+    uint16_t amount() {
+        return (_AMNT << 3);
+    }
 
     // доступ к буферу
     uint8_t buffer[_AMNT];
 
 private:
+    uint8_t& getB(uint16_t num) {
+        return buffer[_AMNT - 1 - (num >> 3)];
+    }
+    
     void configurePin(uint8_t num, uint8_t pin) {
         pinMode(pin, OUTPUT);
         #ifdef __AVR__
