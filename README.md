@@ -5,6 +5,9 @@
 
 [![Foo](https://img.shields.io/badge/ПОДПИСАТЬСЯ-НА%20ОБНОВЛЕНИЯ-brightgreen.svg?style=social&logo=telegram&color=blue)](https://t.me/GyverLibs)
 
+|⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️<br><br>**ВНИМАНИЕ, БИБЛИОТЕКА УСТАРЕЛА! ИСПОЛЬЗУЙ БИБЛИОТЕКУ [GyverShift](https://github.com/GyverLibs/GyverShift), ОНА БЫСТРЕЕ И ИМЕЕТ БОЛЬШЕ ВОЗМОЖНОСТЕЙ**<br><br>⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️⚠️|
+| --- |
+
 # GyverHC595
 Библиотека для управления каскадом сдвиговых регистров 74HC595 для Arduino
 - Обращение по номеру пина в каскаде
